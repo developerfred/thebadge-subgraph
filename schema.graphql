@@ -1,12 +1,4 @@
-type ApprovalForAll @entity(immutable: true) {
-  id: Bytes!
-  account: Bytes! # address
-  operator: Bytes! # address
-  approved: Boolean! # bool
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
+
 
 type BadgeClaimed @entity(immutable: true) {
   id: Bytes!
@@ -46,13 +38,7 @@ type Initialized @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type Paused @entity(immutable: true) {
-  id: Bytes!
-  account: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
+
 
 type PaymentMade @entity(immutable: true) {
   id: Bytes!
@@ -75,7 +61,51 @@ type ProtocolSettingsUpdated @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type RoleAdminChanged @entity(immutable: true) {
+
+
+
+
+
+type TheBadgeUsersInitialize @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeUsersInitialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+
+
+type TheBadgeUsersPaymentMade @entity(immutable: true) {
+  id: Bytes!
+  recipient: Bytes! # address
+  payer: Bytes! # address
+  amount: BigInt! # uint256
+  paymentType: Int! # uint8
+  badgeModelId: BigInt! # uint256
+  controllerName: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeUsersProtocolSettingsUpdated @entity(immutable: true) {
+  id: Bytes!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeUsersRoleAdminChanged @entity(immutable: true) {
   id: Bytes!
   role: Bytes! # bytes32
   previousAdminRole: Bytes! # bytes32
@@ -85,7 +115,7 @@ type RoleAdminChanged @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type RoleGranted @entity(immutable: true) {
+type TheBadgeUsersRoleGranted @entity(immutable: true) {
   id: Bytes!
   role: Bytes! # bytes32
   account: Bytes! # address
@@ -95,7 +125,7 @@ type RoleGranted @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type RoleRevoked @entity(immutable: true) {
+type TheBadgeUsersRoleRevoked @entity(immutable: true) {
   id: Bytes!
   role: Bytes! # bytes32
   account: Bytes! # address
@@ -105,51 +135,655 @@ type RoleRevoked @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type TransferBatch @entity(immutable: true) {
+type UpdatedUser @entity(immutable: true) {
   id: Bytes!
-  operator: Bytes! # address
-  from: Bytes! # address
-  to: Bytes! # address
-  ids: [BigInt!]! # uint256[]
-  values: [BigInt!]! # uint256[]
+  userAddress: Bytes! # address
+  metadata: String! # string
+  suspended: Boolean! # bool
+  isCreator: Boolean! # bool
+  deleted: Boolean! # bool
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type TransferSingle @entity(immutable: true) {
+type UserRegistered @entity(immutable: true) {
   id: Bytes!
-  operator: Bytes! # address
-  from: Bytes! # address
-  to: Bytes! # address
-  TheBadge_id: BigInt! # uint256
-  value: BigInt! # uint256
+  user: Bytes! # address
+  metadata: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type URI @entity(immutable: true) {
+type UserVerificationExecuted @entity(immutable: true) {
   id: Bytes!
-  value: String! # string
-  TheBadge_id: BigInt! # uint256
+  user: Bytes! # address
+  controllerName: String! # string
+  verify: Boolean! # bool
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type Unpaused @entity(immutable: true) {
+type UserVerificationRequested @entity(immutable: true) {
   id: Bytes!
+  user: Bytes! # address
+  metadata: String! # string
+  controllerName: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+type BadgeModelControllerAdded @entity(immutable: true) {
+  id: Bytes!
+  controllerName: String! # string
+  controllerAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeModelControllerUpdated @entity(immutable: true) {
+  id: Bytes!
+  controllerName: String! # string
+  controllerAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeModelCreated @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeModelSuspended @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  suspended: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeModelUpdated @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeModelVersionUpdated @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  newBadgeModelId: BigInt! # uint256
+  version: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeModelsInitialize @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeModelsInitialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeModelsOwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeModelsRoleAdminChanged @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  previousAdminRole: Bytes! # bytes32
+  newAdminRole: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TheBadgeModelsRoleGranted @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
   account: Bytes! # address
+  sender: Bytes! # address
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type Upgraded @entity(immutable: true) {
+type TheBadgeModelsRoleRevoked @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+type DepositReturned @entity(immutable: true) {
+  id: Bytes!
+  recipient: Bytes! # address
+  amount: BigInt! # uint256
+  badgeId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerInitialize @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  tcrFactory: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerInitialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeChallenged @entity(immutable: true) {
+  id: Bytes!
+  badgeId: BigInt! # uint256
+  challenger: Bytes! # address
+  evidence: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosChallengeEvidenceAdded @entity(immutable: true) {
+  id: Bytes!
+  badgeId: BigInt! # uint256
+  challenger: Bytes! # address
+  evidence: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type MintKlerosBadge @entity(immutable: true) {
+  id: Bytes!
+  badgeId: BigInt! # uint256
+  evidence: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewKlerosBadgeModel @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  tcrAddress: Bytes! # address
+  registrationMetaEvidence: String! # string
+  clearingMetaEvidence: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerOwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerProtocolSettingsUpdated
+  @entity(immutable: true) {
+  id: Bytes!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerRoleAdminChanged @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  previousAdminRole: Bytes! # bytes32
+  newAdminRole: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerRoleGranted @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerRoleRevoked @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type KlerosBadgeModelControllerUpgraded @entity(immutable: true) {
   id: Bytes!
   implementation: Bytes! # address
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+}
+type TpBadgeModelControllerInitialize @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerInitialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewThirdPartyBadgeModel @entity(immutable: true) {
+  id: Bytes!
+  badgeModelId: BigInt! # uint256
+  tcrAddress: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerProtocolSettingsUpdated @entity(immutable: true) {
+  id: Bytes!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerRoleAdminChanged @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  previousAdminRole: Bytes! # bytes32
+  newAdminRole: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerRoleGranted @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerRoleRevoked @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ThirdPartyBadgeClaimed @entity(immutable: true) {
+  id: Bytes!
+  originAddress: Bytes! # address
+  recipientAddress: Bytes! # address
+  badgeId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ThirdPartyBadgeMinted @entity(immutable: true) {
+  id: Bytes!
+  badgeId: BigInt! # uint256
+  tcrItemId: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TpBadgeModelControllerUpgraded @entity(immutable: true) {
+  id: Bytes!
+  implementation: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+## Schema correto 
+enum BadgeStatus {
+  Absent
+  Requested
+  Approved
+  Challenged
+  RequestRemoval
+}
+
+enum KlerosRequestType {
+  Registration # Identifies a request to register an item to the registry.
+  Clearing # Identifies a request to remove an item from the registry.
+}
+
+enum Controller {
+  kleros
+}
+
+## - BADGE Model
+type BadgeModel @entity {
+  id: ID!
+  uri: String!
+  controllerType: String!
+  validFor: BigInt!
+  creatorFee: BigInt!
+  protocolFeeInBps: BigInt!
+  totalFeesGenerated: BigInt! ## The total amount of fees that users paid to mint this model
+  paused: Boolean!
+  creator: User!
+  badgesMintedAmount: BigInt!
+  createdAt: BigInt!
+  createdTxHash: Bytes!
+  badgeModelKleros: BadgeModelKlerosMetaData
+  badgeModelThirdParty: BadgeModelThirdPartyMetaData
+  contractAddress: Bytes!
+  mintedBadges: [Badge!]! @derivedFrom(field: "badgeModel")
+  version: BigInt!
+  networkName: String! # The id of the network in which this badgeModel has been created
+}
+
+type BadgeModelKlerosMetaData @entity {
+  id: ID!
+  badgeModel: BadgeModel!
+  registrationUri: String!
+  removalUri: String!
+  tcrList: Bytes!
+  governor: Bytes!
+  arbitrator: Bytes!
+  admin: Bytes!
+  submissionBaseDeposit: BigInt!
+  challengePeriodDuration: BigInt!
+}
+
+type BadgeModelThirdPartyMetaData @entity {
+  id: ID!
+  badgeModel: BadgeModel!
+  tcrList: Bytes!
+  governor: Bytes!
+  arbitrator: Bytes!
+  admin: Bytes!
+  submissionBaseDeposit: BigInt!
+  challengePeriodDuration: BigInt!
+  requirementsIPFSHash: String!
+}
+
+## - BADGE
+
+type Badge @entity {
+  id: ID!
+  badgeModel: BadgeModel!
+  uri: String!
+  account: User! # The receiver of the badge
+  status: BadgeStatus!
+  validUntil: BigInt!
+  createdAt: BigInt!
+  claimedAt: BigInt
+  createdTxHash: Bytes!
+  claimedTxHash: Bytes
+  contractAddress: Bytes!
+  badgeKlerosMetaData: BadgeKlerosMetaData @derivedFrom(field: "badge")
+  badgeThirdPartyMetaData: BadgeThirdPartyMetaData @derivedFrom(field: "badge")
+  networkName: String! # The id of the network in which this badgeModel has been created
+}
+
+## Equivalent to Kleros LItem
+type BadgeKlerosMetaData @entity {
+  id: ID! # the same as ID as the BADGE
+  badge: Badge!
+  tcrStatus: BadgeStatus!
+  itemID: Bytes!
+  reviewDueDate: BigInt! # The timestamp when the review period ends. if zero, it does not have review period
+  "The total number of requests for this item."
+  numberOfRequests: BigInt!
+  requests: [KlerosBadgeRequest!]! @derivedFrom(field: "badgeKlerosMetaData")
+}
+
+## Equivalent to BadgeKlerosMetaData
+type BadgeThirdPartyMetaData @entity {
+  id: ID! # the same as ID as the BADGE
+  badge: Badge!
+  tcrStatus: BadgeStatus!
+  itemID: Bytes!
+  badgeDataUri: String!
+}
+
+type _KlerosBadgeIdToBadgeId @entity {
+  id: ID! # itemID from kleros.
+  badgeId: String! # badge id.
+}
+
+type _EvidenceGroupIDItemID @entity {
+  id: ID!
+  "Item submission ID, it can be a TCR random item or a badge submission request"
+  itemID: String!
+}
+
+type _ItemIDToEvidenceGroupIDToBadgeID @entity {
+  "Item submission ID, it can be a TCR random item or a badge submission request"
+  id: ID!
+  evidenceGroupID: String!
+  badgeID: String
+}
+
+## - USER
+
+type User @entity {
+  id: ID!
+  badges: [Badge!] @derivedFrom(field: "account") # TODO: check how to handle different types of badges
+  # Note: this was enabled for optimization but it does not let us to query from the user to its badges, we need to make the property mandatory an empty
+  createdBadgeModels: [BadgeModel!]! # @derivedFrom(field: "creator")
+  # creator
+  metadataUri: String
+  isCompany: Boolean!
+  isCreator: Boolean!
+  suspended: Boolean!
+  isCurator: Boolean!
+  isRegistered: Boolean!
+  "User protocol statistics."
+  statistics: UserStatistic! @derivedFrom(field: "user")
+}
+
+## Kleros Entities, source: https://github.com/kleros/gtcr-subgraph/blob/master/schema.graphql
+
+enum Ruling {
+  "The arbitrator did not rule or refused to rule."
+  None
+  "The arbitrator ruled in favor of the requester."
+  Accept
+  "The arbitrator in favor of the challenger."
+  Reject
+}
+
+type Evidence @entity {
+  "<Request.id>-<evidence number>"
+  id: ID!
+  "The URI of the evidence file."
+  uri: String!
+  "When was this evidence posted"
+  timestamp: BigInt!
+  "Who has send the evidence"
+  sender: Bytes!
+  "The latest request when this evidence was submitted."
+  request: KlerosBadgeRequest
+}
+
+## Equivalent to Kleros LRequest
+type KlerosBadgeRequest @entity {
+  id: ID!
+  type: KlerosRequestType!
+  createdAt: BigInt!
+  badgeKlerosMetaData: BadgeKlerosMetaData
+  requestIndex: BigInt
+  arbitrationParamsIndex: BigInt
+  disputeID: BigInt
+  requester: Bytes
+  challenger: Bytes
+  "Evidence provided regarding this request (matching evidenceGroupID)."
+  evidences: [Evidence!]! @derivedFrom(field: "request")
+  "Number of evidences."
+  numberOfEvidences: BigInt!
+  "The time the request was resolved."
+  resolutionTime: BigInt!
+  "Whether the item is currently disputed."
+  disputed: Boolean!
+  "True if the request was executed and/or any raised disputes were resolved."
+  resolved: Boolean!
+  "The hash of the transaction that solved this request."
+  resolutionTx: Bytes
+  "The outcome of the dispute, if any. Note that unsuccessful appeal fundings can invert the arbitrator ruling (so this may differ from the ruling given by the arbitrator)."
+  disputeOutcome: Ruling!
+  "The arbitrator's address."
+  arbitrator: Bytes!
+}
+
+type ProtocolStatistic @entity {
+  # Same as the contractAddress
+  id: ID!
+  badgeModelsCreatedAmount: BigInt!
+  badgesMintedAmount: BigInt!
+  badgesChallengedAmount: BigInt! #
+  # The amount of DIFFERENT users that owns at least one badge
+  badgesOwnersAmount: BigInt!
+  badgeCreatorsAmount: BigInt!
+  badgeCuratorsAmount: BigInt!
+  registeredUsersAmount: BigInt!
+
+  ## Fees statistics
+  protocolEarnedFees: BigInt! # The total amount of fees earned by the protocol
+  totalCreatorsFees: BigInt! # The total amount of fees earned by all the creators in the protocol
+  # Keep track of the users that made at least one curation
+  badgeCurators: [Bytes!]! #
+  # Keep track of the users that registered as creators
+  badgeCreators: [Bytes!]!
+  # Keep track of the users that registered on the platform
+  registeredUsers: [Bytes!]!
+
+  protocolConfig: ProtocolConfig! @derivedFrom(field: "protocolStatistics")
+}
+
+type UserStatistic @entity {
+  id: ID!
+  user: User!
+
+  # User statistics
+  mintedBadgesAmount: BigInt! # Amount of badges minted by this user
+  timeOfLastChallengeReceived: BigInt!
+  challengesReceivedAmount: BigInt!
+  challengesReceivedLostAmount: BigInt! # Challenges received LOST as badge user
+  challengesReceivedWonAmount: BigInt! # Challenges received WON as badge user
+  challengesReceivedRejectedAmount: BigInt! # Challenges received rejected to arbitrate as badge user
+  # Creator statistics
+  creatorStatistic: CreatorStatistic @derivedFrom(field: "userStatistic")
+
+  # Curator statistics
+  curatorStatistic: CuratorStatistic @derivedFrom(field: "userStatistic")
+}
+
+type CreatorStatistic @entity {
+  # UserAddress
+  id: ID!
+  userStatistic: UserStatistic!
+
+  # Creator statistics
+  createdBadgeModelsAmount: BigInt! # Amount of badges created by this user
+  createdBadgeModelsMintedAmount: BigInt! # Amounts of MINTS of other users to badges created by this user
+  allTimeBadgeMinters: [Bytes!]! # Keep track of the users that made at least one mint
+  allTimeBadgeMintersAmount: BigInt! # Amount of different USERS that minted at least one of the badges of this creator
+  mostPopularCreatedBadge: BigInt! # The ID of the badge created by this user which has the max amount of mints by others users
+  totalFeesEarned: BigInt! # The total amount of fees earned by owned badge models
+}
+
+type CuratorStatistic @entity {
+  # UserAddress
+  id: ID!
+  userStatistic: UserStatistic!
+
+  # Curator statistics
+  challengesMadeAmount: BigInt! # Challenges made as curator
+  challengesMadeLostAmount: BigInt! # Challenges made LOST as curator
+  challengesMadeWonAmount: BigInt! # Challenges made WON as curator
+  challengesMadeRejectedAmount: BigInt! # Challenges made rejected to arbitrate as curator
+}
+
+type ProtocolConfig @entity {
+  # Same as the TB contractAddress
+  id: ID!
+  protocolStatistics: ProtocolStatistic!
+
+  # Configured accounts
+  contractAdmin: Bytes! # Address of the contract deployer
+  feeCollector: Bytes # Address of the account configured to collect the protocol fees
+  # Configured fees
+  registerUserProtocolFee: BigInt! # Configured protocol fees to pay in order to register as creator
+  createBadgeModelProtocolFee: BigInt! # Configured protocol fees to pay in order to create a badge model
+  mintBadgeProtocolDefaultFeeInBps: BigInt! # Configured protocol fees in BPS to pay in order to mint a badge model (default value, this will be different in each model)
+  claimBadgeProtocolFee: BigInt! # Configured protocol fees to pay from in order to claim a badge
+  controllerConfigs: [ControllerConfig!]
+    @derivedFrom(field: "generalProtocolConfig") #
+}
+
+type ControllerConfig @entity {
+  # Same as the controller contractAddress
+  id: ID!
+  generalProtocolConfig: ProtocolConfig!
+  controllerName: String!
+
+  # Configured accounts
+  contractAdmin: Bytes! # Address of the contract deployer
+  arbitrator: Bytes # Address of the controller arbitrator (empty if not klerosController)
+  tcrFactory: Bytes # Address of the factory that instanciastes the TCR lists (empty if not klerosController)
+  # Configured fees
+  verifyUserProtocolFee: BigInt!
 }

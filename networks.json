@@ -1,8 +1,24 @@
 {
   "matic": {
     "TheBadge": {
-      "address": "0xba42dc1c5aa0f1094806c2914aa916e2cfe3d10e",
-      "startBlock": 50544666
+      "address": "0xE6c5c3174439DA7D2D60456Ca7eB97E7Dcd551e6",
+      "startBlock": 50544671
+    },
+    "TheBadgeUsers": {
+      "address": "0x8Edfc741aED6B2C43485983d4C7b6B095b00500c",
+      "startBlock": 50544539
+    },
+    "TheBadgeModels": {
+      "address": "0x3C838b8571c53D29108F69b98145f8FcC446Fa5a",
+      "startBlock": 50544663
+    },
+    "KlerosBadgeModelController": {
+      "address": "0x5b7a6b423246df397daa10f416e42ebff63d0bc4",
+      "startBlock": 50613363
+    },
+    "TpBadgeModelController": {
+      "address": "0x4dC5E2FaC3D0254fEF7f40163261b9307c1C9df3",
+      "startBlock": 50547525
     }
   }
 }

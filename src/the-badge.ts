@@ -1,271 +1,457 @@
+import { BigInt, Bytes, log, store } from "@graphprotocol/graph-ts";
 import {
-  ApprovalForAll as ApprovalForAllEvent,
-  BadgeClaimed as BadgeClaimedEvent,
-  BadgeRequested as BadgeRequestedEvent,
-  Initialize as InitializeEvent,
-  Initialized as InitializedEvent,
-  Paused as PausedEvent,
-  PaymentMade as PaymentMadeEvent,
-  ProtocolSettingsUpdated as ProtocolSettingsUpdatedEvent,
-  RoleAdminChanged as RoleAdminChangedEvent,
-  RoleGranted as RoleGrantedEvent,
-  RoleRevoked as RoleRevokedEvent,
-  TransferBatch as TransferBatchEvent,
-  TransferSingle as TransferSingleEvent,
-  URI as URIEvent,
-  Unpaused as UnpausedEvent,
-  Upgraded as UpgradedEvent
-} from "../generated/TheBadge/TheBadge"
-import {
-  ApprovalForAll,
   BadgeClaimed,
   BadgeRequested,
   Initialize,
-  Initialized,
-  Paused,
   PaymentMade,
   ProtocolSettingsUpdated,
-  RoleAdminChanged,
-  RoleGranted,
-  RoleRevoked,
-  TransferBatch,
-  TransferSingle,
-  URI,
-  Unpaused,
-  Upgraded
-} from "../generated/schema"
+  TheBadge
+} from "../generated/TheBadge/TheBadge";
 
-export function handleApprovalForAll(event: ApprovalForAllEvent): void {
-  let entity = new ApprovalForAll(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-  entity.operator = event.params.operator
-  entity.approved = event.params.approved
+import {
+  Badge,
+  BadgeKlerosMetaData,
+  BadgeModel,
+  BadgeThirdPartyMetaData,
+  ProtocolConfig,
+  ProtocolStatistic,
+  User
+} from "../generated/schema";
+import {
+  handleMintStatisticsUpdate,
+  initializeProtocolStatistics,
+  loadUserCreatorStatisticsOrGetDefault,
+  loadUserOrGetDefault,
+  loadUserStatisticsOrGetDefault,
+  PaymentType_CreatorMintFee,
+  PaymentType_ProtocolFee,
+  PaymentType_UserRegistrationFee,
+  PaymentType_UserVerificationFee,
+  TheBadgeBadgeStatus_Requested
+} from "./utils";
+import {
+  UpdatedUser,
+  UserRegistered
+} from "../generated/TheBadgeUsers/TheBadgeUsers";
+import {
+  BadgeModelCreated,
+  BadgeModelSuspended,
+  BadgeModelUpdated,
+  TheBadgeModels
+} from "../generated/TheBadgeModels/TheBadgeModels";
+import { TheBadgeStore } from "../generated/TheBadge/TheBadgeStore";
+import { TheBadgeUsers } from "../generated/TheBadge/TheBadgeUsers";
+import { BadgeModelBuilder } from "./utils/builders/badgeModelBuilder";
+import { BadgeBuilder } from "./utils/builders/badgeBuilder";
+import { UserBuilder } from "./utils/builders/userBuilder";
+import { ProtocolConfigsBuilder } from "./utils/builders/protocolConfigsBuilder";
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+// event Initialize(address indexed admin);
+export function handleInitialize(event: Initialize): void {
+  const contractAddress = event.address.toHexString();
+  const admin = event.params.admin;
 
-  entity.save()
+  // Register new statistic using the contractAddress
+  const statistic = initializeProtocolStatistics(contractAddress);
+  statistic.save();
+
+  const protocolConfigsBuilder = new ProtocolConfigsBuilder(
+    contractAddress,
+    statistic.id,
+    admin
+  );
+  const protocolConfigs = protocolConfigsBuilder.build();
+  protocolConfigs.save();
 }
 
-export function handleBadgeClaimed(event: BadgeClaimedEvent): void {
-  let entity = new BadgeClaimed(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.badgeId = event.params.badgeId
-  entity.origin = event.params.origin
-  entity.destination = event.params.destination
+// event UserRegistered(address indexed creator, string metadata);
+export function handleUserRegistered(event: UserRegistered): void {
+  const id = event.params.user.toHexString();
+  const theBadgeUsers = TheBadgeUsers.bind(event.address);
+  const theBadgeStore = TheBadgeStore.bind(theBadgeUsers._badgeStore());
+  const theBadgeContractAddress = theBadgeStore.allowedContractAddressesByContractName(
+    "TheBadge"
+  );
+  const contractUser = theBadgeUsers.getUser(event.params.user);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const userBuilder = new UserBuilder(id, contractUser);
+  const user = userBuilder.build();
+  user.save();
 
-  entity.save()
+  // Setup statistics for the user
+  const userStatistics = loadUserStatisticsOrGetDefault(id);
+  userStatistics.save();
+
+  // Add a new registered user to the protocol statistics
+  const statistic = ProtocolStatistic.load(
+    theBadgeContractAddress.toHexString()
+  );
+  if (!statistic) {
+    log.error(
+      "handleUserRegistered - ProtocolStatistic not found for contractAddress {}",
+      [theBadgeContractAddress.toHexString()]
+    );
+    return;
+  }
+
+  statistic.registeredUsersAmount = statistic.registeredUsersAmount.plus(
+    BigInt.fromI32(1)
+  );
+  const auxUsers = statistic.registeredUsers;
+  auxUsers.push(Bytes.fromHexString(id));
+  statistic.registeredUsers = auxUsers;
+  statistic.save();
 }
 
-export function handleBadgeRequested(event: BadgeRequestedEvent): void {
-  let entity = new BadgeRequested(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.badgeModelID = event.params.badgeModelID
-  entity.badgeID = event.params.badgeID
-  entity.recipient = event.params.recipient
-  entity.controller = event.params.controller
-  entity.controllerBadgeId = event.params.controllerBadgeId
+// event UpdatedUser(indexed address,string,bool,bool,bool);
+export function handleUserUpdated(event: UpdatedUser): void {
+  const contractAddress = event.address.toHexString();
+  const theBadgeUsers = TheBadgeUsers.bind(event.address);
+  const theBadgeStore = TheBadgeStore.bind(theBadgeUsers._badgeStore());
+  const theBadgeContractAddress = theBadgeStore.allowedContractAddressesByContractName(
+    "TheBadge"
+  );
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const statistic = ProtocolStatistic.load(
+    theBadgeContractAddress.toHexString()
+  );
+  if (!statistic) {
+    // This should not happen as the statistics should be already instantiated in the initialized event of the contract
+    log.error(
+      "handleUserUpdated - ProtocolStatistic not found for contractAddress {}",
+      [contractAddress]
+    );
+    return;
+  }
 
-  entity.save()
+  const id = event.params.userAddress.toHexString();
+  const user = User.load(id);
+
+  if (!user) {
+    log.error(
+      "handleUserUpdated - User with address {} not found, please check the contract as it could be an error there",
+      [id]
+    );
+    return;
+  }
+
+  const contractUser = theBadgeUsers.getUser(event.params.userAddress);
+
+  user.isCreator = contractUser.isCreator;
+  user.metadataUri = contractUser.metadata;
+  user.suspended = contractUser.suspended;
+  user.save();
+
+  if (contractUser.isCreator) {
+    // New creator registered
+    if (!statistic.badgeCreators.includes(Bytes.fromHexString(id))) {
+      statistic.badgeCreatorsAmount = statistic.badgeCreatorsAmount.plus(
+        BigInt.fromI32(1)
+      );
+      const auxCreators = statistic.badgeCreators;
+      auxCreators.push(Bytes.fromHexString(id));
+      statistic.badgeCreators = auxCreators;
+      statistic.save();
+
+      const creatorStatistic = loadUserCreatorStatisticsOrGetDefault(
+        contractAddress
+      );
+      creatorStatistic.save();
+    }
+  }
 }
 
-export function handleInitialize(event: InitializeEvent): void {
-  let entity = new Initialize(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.admin = event.params.admin
+// event BadgeModelCreated(uint256 indexed badgeModelId);
+export function handleBadgeModelCreated(event: BadgeModelCreated): void {
+  const badgeModelId = event.params.badgeModelId;
+  const theBadgeModels = TheBadgeModels.bind(event.address);
+  const theBadgeStore = TheBadgeStore.bind(theBadgeModels._badgeStore());
+  const theBadgeContractAddress = theBadgeStore.allowedContractAddressesByContractName(
+    "TheBadge"
+  );
+  const _badgeModel = theBadgeStore.badgeModels(badgeModelId);
+  const creatorAddress = _badgeModel.getCreator().toHexString();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const user = User.load(creatorAddress);
 
-  entity.save()
+  if (!user) {
+    log.error(
+      "handleBadgeModelCreated - User with address {} not found, please check the contract as it could be an error there",
+      [creatorAddress]
+    );
+    return;
+  }
+
+  // Badge model
+  const badgeModelBuilder = new BadgeModelBuilder(
+    badgeModelId.toString(),
+    _badgeModel,
+    user,
+    event
+  );
+  const badgeModel = badgeModelBuilder.build();
+  badgeModel.save();
+
+  // Updates the user with the new created badge
+  const auxCreatedBadges = user.createdBadgeModels;
+  auxCreatedBadges.push(badgeModel.id);
+  user.createdBadgeModels = auxCreatedBadges;
+  user.save();
+
+  // Statistics update
+  const creatorStatistics = loadUserCreatorStatisticsOrGetDefault(
+    badgeModel.creator
+  );
+
+  creatorStatistics.createdBadgeModelsAmount = creatorStatistics.createdBadgeModelsAmount.plus(
+    BigInt.fromI32(1)
+  );
+  creatorStatistics.save();
+
+  const protocolStatistics = ProtocolStatistic.load(
+    theBadgeContractAddress.toHexString()
+  );
+  if (protocolStatistics) {
+    protocolStatistics.badgeModelsCreatedAmount = protocolStatistics.badgeModelsCreatedAmount.plus(
+      BigInt.fromI32(1)
+    );
+    protocolStatistics.save();
+  }
 }
 
-export function handleInitialized(event: InitializedEvent): void {
-  let entity = new Initialized(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.version = event.params.version
+// event BadgeRequested(uint256 indexed badgeModelID, uint256 indexed badgeID, address indexed recipient, address controller, uint256 controllerBadgeId);
+export function handleBadgeRequested(event: BadgeRequested): void {
+  const contractAddress = event.address.toHexString();
+  const theBadge = TheBadge.bind(event.address);
+  const badgeID = event.params.badgeID;
+  const badgeRecipient = event.params.recipient.toHexString();
+  const theBadgeStore = TheBadgeStore.bind(theBadge._badgeStore());
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const _badge = theBadgeStore.badges(badgeID);
+  const badgeModelID = _badge.getBadgeModelId().toString();
+  let badgeStatus = TheBadgeBadgeStatus_Requested;
 
-  entity.save()
+  // Badge model
+  const badgeModel = BadgeModel.load(badgeModelID);
+
+  if (!badgeModel) {
+    log.error("handleMint - BadgeModel not found. badgeId {} badgeModelId {}", [
+      badgeID.toString(),
+      badgeModelID
+    ]);
+    return;
+  }
+
+  const badgeThirdPartyMetadata = BadgeThirdPartyMetaData.load(
+    badgeID.toString()
+  );
+  const badgeKlerosMetadata = BadgeKlerosMetaData.load(badgeID.toString());
+  if (!badgeThirdPartyMetadata && !badgeKlerosMetadata) {
+    log.error(
+      "handleMint - badgeThirdPartyMetadata or badgeKlerosMetadata not found. badgeId {} badgeModelId {}",
+      [badgeID.toString(), badgeModelID]
+    );
+    return;
+  }
+
+  if (badgeThirdPartyMetadata) {
+    badgeStatus = badgeThirdPartyMetadata.tcrStatus;
+  } else {
+    badgeStatus = badgeKlerosMetadata
+      ? badgeKlerosMetadata.tcrStatus
+      : badgeStatus;
+  }
+
+  badgeModel.badgesMintedAmount = badgeModel.badgesMintedAmount.plus(
+    BigInt.fromI32(1)
+  );
+  badgeModel.save();
+
+  // Badge
+  const badgeBuilder = new BadgeBuilder(
+    badgeID.toString(),
+    badgeModelID,
+    badgeRecipient,
+    badgeStatus,
+    _badge,
+    theBadge.uri(badgeID),
+    event
+  );
+  const badge = badgeBuilder.build();
+  badge.save();
+
+  // Loads or creates an user if does not exists
+  const user = loadUserOrGetDefault(badgeRecipient);
+
+  // Updates statistics
+  handleMintStatisticsUpdate(
+    user.id,
+    badgeModel.creator,
+    badgeModel.id,
+    contractAddress
+  );
 }
 
-export function handlePaused(event: PausedEvent): void {
-  let entity = new Paused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
+// event BadgeClaimed(uint256 indexed badgeId, address indexed origin, address indexed destination);
+export function handleBadgeClaimed(event: BadgeClaimed): void {
+  const badgeId = event.params.badgeId;
+  const recipientAddress = event.params.destination;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  // badge
+  const badgeFound = Badge.load(badgeId.toString());
 
-  entity.save()
+  if (!badgeFound) {
+    log.error(`handleClaim - badge claimed with id: {} not found!`, [
+      badgeId.toString()
+    ]);
+    return;
+  }
+
+  const theBadge = TheBadge.bind(event.address);
+  const theBadgeStore = TheBadgeStore.bind(theBadge._badgeStore());
+  const _badge = theBadgeStore.badges(badgeId);
+
+  // Loads or creates the recipient user if does not exists
+  const user = loadUserOrGetDefault(recipientAddress.toHexString());
+
+  badgeFound.account = user.id;
+  badgeFound.claimedTxHash = event.transaction.hash;
+  badgeFound.claimedAt = event.block.timestamp;
+  badgeFound.validUntil = _badge.getDueDate();
+  badgeFound.save();
 }
 
-export function handlePaymentMade(event: PaymentMadeEvent): void {
-  let entity = new PaymentMade(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.recipient = event.params.recipient
-  entity.payer = event.params.payer
-  entity.amount = event.params.amount
-  entity.paymentType = event.params.paymentType
-  entity.badgeModelId = event.params.badgeModelId
-  entity.controllerName = event.params.controllerName
+// BadgeModelUpdated(uint256 indexed badgeModelId);
+export function handleBadgeModelUpdated(event: BadgeModelUpdated): void {
+  const badgeModelID = event.params.badgeModelId.toString();
+  const theBadgeModels = TheBadgeModels.bind(event.address);
+  const theBadgeStore = TheBadgeStore.bind(theBadgeModels._badgeStore());
+  const storeBadgeModel = theBadgeStore.badgeModels(event.params.badgeModelId);
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  // Badge model
+  const badgeModel = BadgeModel.load(badgeModelID);
 
-  entity.save()
+  if (!badgeModel) {
+    log.error(
+      "handleBadgeModelUpdated - BadgeModel not found. badgeModelId:  {}",
+      [badgeModelID]
+    );
+    return;
+  }
+
+  badgeModel.protocolFeeInBps = storeBadgeModel.getMintProtocolFee();
+  badgeModel.creatorFee = storeBadgeModel.getMintCreatorFee();
+  badgeModel.paused = storeBadgeModel.getPaused();
+  badgeModel.save();
 }
 
+// BadgeModelSuspended(uint256 indexed badgeModelId, bool suspended);
+export function handleBadgeModelSuspended(event: BadgeModelSuspended): void {
+  const badgeModelID = event.params.badgeModelId.toString();
+  const suspended = event.params.suspended;
+
+  // Badge model
+  const badgeModel = BadgeModel.load(badgeModelID);
+
+  if (!badgeModel) {
+    log.error(
+      "handleBadgeModelUpdated - BadgeModel not found. badgeModelId:  {}",
+      [badgeModelID]
+    );
+    return;
+  }
+
+  if (suspended) {
+    store.remove("BadgeModel", badgeModelID);
+  }
+}
+
+// ProtocolSettingsUpdated();
 export function handleProtocolSettingsUpdated(
-  event: ProtocolSettingsUpdatedEvent
+  event: ProtocolSettingsUpdated
 ): void {
-  let entity = new ProtocolSettingsUpdated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
+  const theBadgeAddress = event.address;
+  const theBadge = TheBadge.bind(theBadgeAddress);
+  const tbSTore = theBadge.try__badgeStore();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  if (!tbSTore.reverted) {
+    const theBadgeStore = TheBadgeStore.bind(tbSTore.value);
+    let protocolConfigs = ProtocolConfig.load(theBadgeAddress.toHexString());
 
-  entity.save()
+    if (!protocolConfigs) {
+      protocolConfigs = new ProtocolConfig(theBadgeAddress.toHexString());
+    }
+
+    // Register new statistic using the contractAddress
+    const statistic = initializeProtocolStatistics(
+      theBadgeAddress.toHexString()
+    );
+    statistic.save();
+
+    protocolConfigs.protocolStatistics = statistic.id;
+    protocolConfigs.feeCollector = theBadgeStore.feeCollector();
+
+    const theBadgeUsers = TheBadgeUsers.bind(theBadge._badgeUsers());
+    protocolConfigs.registerUserProtocolFee = theBadgeUsers.getRegisterFee();
+    protocolConfigs.createBadgeModelProtocolFee = theBadgeStore.createBadgeModelProtocolFee();
+    protocolConfigs.mintBadgeProtocolDefaultFeeInBps = theBadgeStore.mintBadgeProtocolDefaultFeeInBps();
+    protocolConfigs.claimBadgeProtocolFee = theBadgeStore.claimBadgeProtocolFee();
+    protocolConfigs.save();
+  } else {
+    log.error("try__badgeStore reverted", []);
+  }
 }
 
-export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
-  let entity = new RoleAdminChanged(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.previousAdminRole = event.params.previousAdminRole
-  entity.newAdminRole = event.params.newAdminRole
+// PaymentMade(address indexed recipient,address payer,uint256 amount, PaymentType indexed paymentType,uint256 indexed badgeModelId,string controllerName);
+export function handlePaymentMade(event: PaymentMade): void {
+  const badgeModelId = event.params.badgeModelId.toString();
+  const paidAmount = event.params.amount;
+  const paymentType = event.params.paymentType;
+  const recipient = event.params.recipient.toHexString();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const statistic = ProtocolStatistic.load(event.address.toHexString());
+  if (!statistic) {
+    log.error(
+      "handlePaymentMade - ProtocolStatistics not found. protocolStatisticsId:  {}",
+      [event.address.toHexString()]
+    );
+    return;
+  }
 
-  entity.save()
-}
+  // Logic for update protocol fees
+  if (
+    paymentType == PaymentType_ProtocolFee ||
+    paymentType == PaymentType_UserRegistrationFee ||
+    paymentType == PaymentType_UserVerificationFee
+  ) {
+    statistic.protocolEarnedFees = statistic.protocolEarnedFees.plus(
+      paidAmount
+    );
+    statistic.save();
+  }
 
-export function handleRoleGranted(event: RoleGrantedEvent): void {
-  let entity = new RoleGranted(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.account = event.params.account
-  entity.sender = event.params.sender
+  // Logic for update creator fees
+  if (paymentType == PaymentType_CreatorMintFee) {
+    statistic.totalCreatorsFees = statistic.totalCreatorsFees.plus(paidAmount);
+    const creatorStatistic = loadUserCreatorStatisticsOrGetDefault(recipient);
+    creatorStatistic.totalFeesEarned = creatorStatistic.totalFeesEarned.plus(
+      paidAmount
+    );
+    statistic.save();
+    creatorStatistic.save();
+  }
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  // Logic for update badge model fees
+  const badgeModel = BadgeModel.load(badgeModelId);
 
-  entity.save()
-}
-
-export function handleRoleRevoked(event: RoleRevokedEvent): void {
-  let entity = new RoleRevoked(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.role = event.params.role
-  entity.account = event.params.account
-  entity.sender = event.params.sender
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleTransferBatch(event: TransferBatchEvent): void {
-  let entity = new TransferBatch(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.operator = event.params.operator
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.ids = event.params.ids
-  entity.values = event.params.values
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleTransferSingle(event: TransferSingleEvent): void {
-  let entity = new TransferSingle(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.operator = event.params.operator
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.TheBadge_id = event.params.id
-  entity.value = event.params.value
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleURI(event: URIEvent): void {
-  let entity = new URI(event.transaction.hash.concatI32(event.logIndex.toI32()))
-  entity.value = event.params.value
-  entity.TheBadge_id = event.params.id
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleUnpaused(event: UnpausedEvent): void {
-  let entity = new Unpaused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleUpgraded(event: UpgradedEvent): void {
-  let entity = new Upgraded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.implementation = event.params.implementation
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+  if (!badgeModel) {
+    log.error("handlePaymentMade - BadgeModel not found. badgeModelId:  {}", [
+      badgeModelId
+    ]);
+    return;
+  }
+  badgeModel.totalFeesGenerated = badgeModel.totalFeesGenerated.plus(
+    paidAmount
+  );
+  badgeModel.save();
 }

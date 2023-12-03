@@ -14,56 +14,194 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - ApprovalForAll
-        - BadgeClaimed
-        - BadgeRequested
-        - Initialize
-        - Initialized
-        - Paused
-        - PaymentMade
-        - ProtocolSettingsUpdated
-        - RoleAdminChanged
-        - RoleGranted
-        - RoleRevoked
-        - TransferBatch
-        - TransferSingle
-        - URI
-        - Unpaused
-        - Upgraded
+        - User
+        - BadgeModel
       abis:
         - name: TheBadge
           file: ./abis/TheBadge.json
-      eventHandlers:
-        - event: ApprovalForAll(indexed address,indexed address,bool)
-          handler: handleApprovalForAll
+        - name: TheBadgeStore
+          file: ./abis/TheBadgeStore.json
+        - name: TheBadgeUsers
+          file: ./abis/TheBadgeUsers.json
+      eventHandlers:       
         - event: BadgeClaimed(indexed uint256,indexed address,indexed address)
           handler: handleBadgeClaimed
         - event: BadgeRequested(indexed uint256,indexed uint256,indexed address,address,uint256)
           handler: handleBadgeRequested
         - event: Initialize(indexed address)
           handler: handleInitialize
-        - event: Initialized(uint64)
-          handler: handleInitialized
-        - event: Paused(address)
-          handler: handlePaused
         - event: PaymentMade(indexed address,address,uint256,indexed uint8,indexed uint256,string)
           handler: handlePaymentMade
         - event: ProtocolSettingsUpdated()
-          handler: handleProtocolSettingsUpdated
-        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
-          handler: handleRoleAdminChanged
-        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleGranted
-        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleRevoked
-        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
-          handler: handleTransferBatch
-        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleTransferSingle
-        - event: URI(string,indexed uint256)
-          handler: handleURI
-        - event: Unpaused(address)
-          handler: handleUnpaused
-        - event: Upgraded(indexed address)
-          handler: handleUpgraded
+          handler: handleProtocolSettingsUpdated       
       file: ./src/the-badge.ts
+  - kind: ethereum
+    name: TheBadgeUsers
+    network: matic
+    source:
+      address: "0x4e14816a80d7c4feeeb56c225e821c6374f4ab56"
+      abi: TheBadgeUsers
+      startBlock: 50544535
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - User
+        - BadgeModel
+      abis:
+        - name: TheBadgeUsers
+          file: ./abis/TheBadgeUsers.json
+        - name: TheBadgeStore
+          file: ./abis/TheBadgeStore.json
+      eventHandlers:        
+        - event: UpdatedUser(indexed address,string,bool,bool,bool)
+          handler: handleUpdatedUser
+        - event: UserRegistered(indexed address,string)
+          handler: handleUserRegistered      
+      file: ./src/the-badge-users.ts
+  - kind: ethereum
+    name: TheBadgeModels
+    network: matic
+    source:
+      address: "0xC1e5906C4bD80787EE859432331B2791bD9BbF12"
+      abi: TheBadgeModels
+      startBlock: 50544543
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+          - User
+          - BadgeModel
+      abis:
+        - name: TheBadgeModels
+          file: ./abis/TheBadgeModels.json
+        - name: TheBadge
+          file: ./abis/TheBadge.json
+        - name: TheBadgeStore
+          file: ./abis/TheBadgeStore.json
+        - name: TheBadgeUsers
+          file: ./abis/TheBadgeUsers.json
+      eventHandlers:
+        - event: BadgeModelCreated(indexed uint256)
+          handler: handleBadgeModelCreated
+        - event: BadgeModelSuspended(indexed uint256,bool)
+          handler: handleBadgeModelSuspended
+        - event: BadgeModelUpdated(indexed uint256)
+          handler: handleBadgeModelUpdated 
+      file: ./src/the-badge.ts
+  - kind: ethereum
+    name: KlerosBadgeModelController
+    network: matic
+    source:
+      address: "0x5b7a6b423246df397daa10f416e42ebff63d0bc4"
+      abi: KlerosBadgeModelController
+      startBlock: 50613363
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BadgeModelKlerosMetaData
+        - BadgeKlerosMetaData
+      abis:
+        - name: KlerosBadgeModelController
+          file: ./abis/KlerosBadgeModelController.json
+        - name: KlerosBadgeModelControllerStore
+          file: ./abis/KlerosBadgeModelControllerStore.json
+        - name: LightGeneralizedTCR
+          file: ./abis/LightGeneralizedTCR.json
+        - name: TheBadge
+          file: ./abis/TheBadge.json
+        - name: TheBadgeModels
+          file: ./abis/TheBadgeModels.json
+        - name: TheBadgeStore
+          file: ./abis/TheBadgeStore.json
+        - name: TheBadgeUsers
+          file: ./abis/TheBadgeUsers.json
+      eventHandlers:
+        - event: Initialize(indexed address,indexed address)
+          handler: handleInitialize
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: MintKlerosBadge(indexed uint256,string)
+          handler: handleMintKlerosBadge
+        - event: NewKlerosBadgeModel(indexed uint256,indexed address,string,string)
+          handler: handleNewKlerosBadgeModel
+      file: ./src/kleros-badge-model-controller.ts
+  - kind: ethereum
+    name: TpBadgeModelController
+    network: matic
+    source:
+      address: "0xa76ba1a457bbcbc4736d9a9028dd29f4e89322e5"
+      abi: TpBadgeModelController
+      startBlock: 50547521
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BadgeModelThirdPartyMetaData
+        - BadgeThirdPartyMetaData
+      abis:
+        - name: TpBadgeModelController
+          file: ./abis/TpBadgeModelController.json
+        - name: LightGeneralizedTCR
+          file: ./abis/LightGeneralizedTCR.json
+        - name: TheBadge
+          file: ./abis/TheBadge.json
+        - name: TheBadgeModels
+          file: ./abis/TheBadgeModels.json
+        - name: TpBadgeModelControllerStore
+          file: ./abis/TpBadgeModelControllerStore.json
+        - name: TheBadgeUsers
+          file: ./abis/TheBadgeUsers.json
+      eventHandlers:
+        - event: Initialize(indexed address)
+          handler: handleInitialize
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: NewThirdPartyBadgeModel(indexed uint256,indexed address)
+          handler: handleNewThirdPartyBadgeModel            
+        - event: ThirdPartyBadgeClaimed(indexed address,indexed address,indexed uint256)
+          handler: handleThirdPartyBadgeClaimed
+        - event: ThirdPartyBadgeMinted(indexed uint256,indexed bytes32)
+          handler: handleThirdPartyBadgeMinted
+      file: ./src/tp-badge-model-controller.ts
+
+templates:
+  - kind: ethereum/contract
+    name: LightGeneralizedTCR
+    network: matic
+    source:
+      abi: LightGeneralizedTCR
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - _EvidenceGroupIDToRequestIDToItemID
+        - Evidence
+        - BadgeModelKlerosMetaData
+      abis:
+        - name: KlerosBadgeModelController
+          file: ./abis/KlerosBadgeModelController.json
+        - name: LightGeneralizedTCR
+          file: ./abis/LightGeneralizedTCR.json
+        - name: TheBadgeModels
+          file: ./abis/TheBadgeModels.json
+        - name: TheBadgeStore
+          file: ./abis/TheBadgeStore.json
+      eventHandlers:
+        - event: RequestSubmitted(indexed bytes32,uint256)
+          handler: handleRequestSubmitted
+        - event: Dispute(indexed address,indexed uint256,uint256,uint256)
+          handler: handleRequestChallenged
+        - event: ItemStatusChange(indexed bytes32,bool)
+          handler: handleStatusUpdated
+        - event: Evidence(indexed address,indexed uint256,indexed address,string)
+          handler: handleEvidence
+        - event: Ruling(indexed address,indexed uint256,uint256)
+          handler: handleRuling
+      file: ./src/lightGeneralizedTCRMapping.ts

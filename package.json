@@ -8,7 +8,9 @@
     "create-local": "graph create --node http://localhost:8020/ developerfred/thebadge-test",
     "remove-local": "graph remove --node http://localhost:8020/ developerfred/thebadge-test",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 developerfred/thebadge-test",
-    "test": "graph test"
+    "test": "graph test",
+    "auth:codingsh": "graph auth --product hosted-service a3195ebe9408404483f3bca0c0ec6424",
+    "deploy:matic-codingsh": "yarn build:matic && graph deploy --product hosted-service developerfred/thebadge-test"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.62.0",
