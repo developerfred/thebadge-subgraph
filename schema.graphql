@@ -1,0 +1,155 @@
+type ApprovalForAll @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  operator: Bytes! # address
+  approved: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeClaimed @entity(immutable: true) {
+  id: Bytes!
+  badgeId: BigInt! # uint256
+  origin: Bytes! # address
+  destination: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BadgeRequested @entity(immutable: true) {
+  id: Bytes!
+  badgeModelID: BigInt! # uint256
+  badgeID: BigInt! # uint256
+  recipient: Bytes! # address
+  controller: Bytes! # address
+  controllerBadgeId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Initialize @entity(immutable: true) {
+  id: Bytes!
+  admin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Initialized @entity(immutable: true) {
+  id: Bytes!
+  version: BigInt! # uint64
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Paused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PaymentMade @entity(immutable: true) {
+  id: Bytes!
+  recipient: Bytes! # address
+  payer: Bytes! # address
+  amount: BigInt! # uint256
+  paymentType: Int! # uint8
+  badgeModelId: BigInt! # uint256
+  controllerName: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ProtocolSettingsUpdated @entity(immutable: true) {
+  id: Bytes!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RoleAdminChanged @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  previousAdminRole: Bytes! # bytes32
+  newAdminRole: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RoleGranted @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RoleRevoked @entity(immutable: true) {
+  id: Bytes!
+  role: Bytes! # bytes32
+  account: Bytes! # address
+  sender: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TransferBatch @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  ids: [BigInt!]! # uint256[]
+  values: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type TransferSingle @entity(immutable: true) {
+  id: Bytes!
+  operator: Bytes! # address
+  from: Bytes! # address
+  to: Bytes! # address
+  TheBadge_id: BigInt! # uint256
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type URI @entity(immutable: true) {
+  id: Bytes!
+  value: String! # string
+  TheBadge_id: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Unpaused @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Upgraded @entity(immutable: true) {
+  id: Bytes!
+  implementation: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

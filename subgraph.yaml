@@ -1,0 +1,69 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: TheBadge
+    network: matic
+    source:
+      address: "0xba42dc1c5aa0f1094806c2914aa916e2cfe3d10e"
+      abi: TheBadge
+      startBlock: 50544666
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ApprovalForAll
+        - BadgeClaimed
+        - BadgeRequested
+        - Initialize
+        - Initialized
+        - Paused
+        - PaymentMade
+        - ProtocolSettingsUpdated
+        - RoleAdminChanged
+        - RoleGranted
+        - RoleRevoked
+        - TransferBatch
+        - TransferSingle
+        - URI
+        - Unpaused
+        - Upgraded
+      abis:
+        - name: TheBadge
+          file: ./abis/TheBadge.json
+      eventHandlers:
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleApprovalForAll
+        - event: BadgeClaimed(indexed uint256,indexed address,indexed address)
+          handler: handleBadgeClaimed
+        - event: BadgeRequested(indexed uint256,indexed uint256,indexed address,address,uint256)
+          handler: handleBadgeRequested
+        - event: Initialize(indexed address)
+          handler: handleInitialize
+        - event: Initialized(uint64)
+          handler: handleInitialized
+        - event: Paused(address)
+          handler: handlePaused
+        - event: PaymentMade(indexed address,address,uint256,indexed uint8,indexed uint256,string)
+          handler: handlePaymentMade
+        - event: ProtocolSettingsUpdated()
+          handler: handleProtocolSettingsUpdated
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: TransferBatch(indexed address,indexed address,indexed address,uint256[],uint256[])
+          handler: handleTransferBatch
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: URI(string,indexed uint256)
+          handler: handleURI
+        - event: Unpaused(address)
+          handler: handleUnpaused
+        - event: Upgraded(indexed address)
+          handler: handleUpgraded
+      file: ./src/the-badge.ts
