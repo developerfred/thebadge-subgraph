@@ -1,14 +1,18 @@
-specVersion: 0.0.5
+specVersion: 0.0.4
+features:
+  - ipfsOnEthereumContracts
+description: TheBadge subgraph
+repository: https://github.com/thebadge/thebadge-subgraph
 schema:
   file: ./schema.graphql
 dataSources:
-  - kind: ethereum
+  - kind: ethereum/contract
     name: TheBadge
     network: matic
     source:
       address: "0xba42dc1c5aa0f1094806c2914aa916e2cfe3d10e"
-      abi: TheBadge
       startBlock: 50544666
+      abi: TheBadge
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -23,19 +27,20 @@ dataSources:
           file: ./abis/TheBadgeStore.json
         - name: TheBadgeUsers
           file: ./abis/TheBadgeUsers.json
-      eventHandlers:       
-        - event: BadgeClaimed(indexed uint256,indexed address,indexed address)
-          handler: handleBadgeClaimed
-        - event: BadgeRequested(indexed uint256,indexed uint256,indexed address,address,uint256)
-          handler: handleBadgeRequested
+      eventHandlers:
         - event: Initialize(indexed address)
-          handler: handleInitialize
+          handler: handleContractInitialized
+        - event: ProtocolSettingsUpdated()
+          handler: handleProtocolSettingsUpdated
         - event: PaymentMade(indexed address,address,uint256,indexed uint8,indexed uint256,string)
           handler: handlePaymentMade
-        - event: ProtocolSettingsUpdated()
-          handler: handleProtocolSettingsUpdated       
-      file: ./src/the-badge.ts
-  - kind: ethereum
+        - event: BadgeRequested(indexed uint256,indexed uint256,indexed address,address,uint256)
+          handler: handleMint
+        - event: BadgeClaimed(indexed uint256,indexed address,indexed address)
+          handler: handleClaim
+      file: ./src/theBadge.ts
+
+  - kind: ethereum/contract
     name: TheBadgeUsers
     network: matic
     source:
@@ -54,13 +59,14 @@ dataSources:
           file: ./abis/TheBadgeUsers.json
         - name: TheBadgeStore
           file: ./abis/TheBadgeStore.json
-      eventHandlers:        
-        - event: UpdatedUser(indexed address,string,bool,bool,bool)
-          handler: handleUpdatedUser
+      eventHandlers:
         - event: UserRegistered(indexed address,string)
-          handler: handleUserRegistered      
-      file: ./src/the-badge-users.ts
-  - kind: ethereum
+          handler: handleUserRegistered
+        - event: UpdatedUser(indexed address,string,bool,bool,bool)
+          handler: handleUserUpdated
+      file: ./src/theBadge.ts
+
+  - kind: ethereum/contract
     name: TheBadgeModels
     network: matic
     source:
@@ -72,8 +78,8 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-          - User
-          - BadgeModel
+        - User
+        - BadgeModel
       abis:
         - name: TheBadgeModels
           file: ./abis/TheBadgeModels.json
@@ -86,12 +92,13 @@ dataSources:
       eventHandlers:
         - event: BadgeModelCreated(indexed uint256)
           handler: handleBadgeModelCreated
+        - event: BadgeModelUpdated(indexed uint256)
+          handler: handleBadgeModelUpdated
         - event: BadgeModelSuspended(indexed uint256,bool)
           handler: handleBadgeModelSuspended
-        - event: BadgeModelUpdated(indexed uint256)
-          handler: handleBadgeModelUpdated 
-      file: ./src/the-badge.ts
-  - kind: ethereum
+      file: ./src/theBadge.ts
+
+  - kind: ethereum/contract
     name: KlerosBadgeModelController
     network: matic
     source:
@@ -102,6 +109,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
+      file: ./src/klerosBadgeModelController.ts
       entities:
         - BadgeModelKlerosMetaData
         - BadgeKlerosMetaData
@@ -122,15 +130,13 @@ dataSources:
           file: ./abis/TheBadgeUsers.json
       eventHandlers:
         - event: Initialize(indexed address,indexed address)
-          handler: handleInitialize
-        - event: Initialized(uint64)
-          handler: handleInitialized
-        - event: MintKlerosBadge(indexed uint256,string)
-          handler: handleMintKlerosBadge
+          handler: handleKlerosContractInitialized
         - event: NewKlerosBadgeModel(indexed uint256,indexed address,string,string)
           handler: handleNewKlerosBadgeModel
-      file: ./src/kleros-badge-model-controller.ts
-  - kind: ethereum
+        - event: MintKlerosBadge(indexed uint256,string)
+          handler: handleMintKlerosBadge
+
+  - kind: ethereum/contract
     name: TpBadgeModelController
     network: matic
     source:
@@ -141,6 +147,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
+      file: ./src/thirdPartyBadgeModelController.ts
       entities:
         - BadgeModelThirdPartyMetaData
         - BadgeThirdPartyMetaData
@@ -159,16 +166,11 @@ dataSources:
           file: ./abis/TheBadgeUsers.json
       eventHandlers:
         - event: Initialize(indexed address)
-          handler: handleInitialize
-        - event: Initialized(uint64)
-          handler: handleInitialized
+          handler: handleThirdPartyContractInitialized
         - event: NewThirdPartyBadgeModel(indexed uint256,indexed address)
-          handler: handleNewThirdPartyBadgeModel            
-        - event: ThirdPartyBadgeClaimed(indexed address,indexed address,indexed uint256)
-          handler: handleThirdPartyBadgeClaimed
+          handler: handleNewThirdPartyBadgeModel
         - event: ThirdPartyBadgeMinted(indexed uint256,indexed bytes32)
-          handler: handleThirdPartyBadgeMinted
-      file: ./src/tp-badge-model-controller.ts
+          handler: handleMintThirdPartyBadge
 
 templates:
   - kind: ethereum/contract
