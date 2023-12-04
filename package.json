@@ -1,20 +1,49 @@
 {
-  "name": "thebadge-test",
-  "license": "UNLICENSED",
+  "name": "thebadge-subgraph",
+  "license": "MIT",
+  "description": "Subgraph for TheBadge smart contracts",
+  "version": "1.1.0.rc80",
   "scripts": {
+    "codegen:goerli": "node codegen/render-templates.js goerli && graph codegen",
+    "codegen:sepolia": "node codegen/render-templates.js sepolia && graph codegen",
+    "codegen:gnosis": "node codegen/render-templates.js gnosis && graph codegen",
+    "codegen:matic": "node codegen/render-templates.js matic && graph codegen",
+    "build:goerli": "yarn codegen:goerli && graph build",
+    "build:sepolia": "yarn codegen:sepolia && graph build",
+    "build:gnosis": "yarn codegen:gnosis && graph build",
+    "build:matic": "yarn codegen:matic && graph build",
+    "deploy:sepolia-dev": "yarn build:sepolia && graph deploy --version-label=${npm_package_version} --studio thebadge-sepolia-dev",
+    "deploy:sepolia-staging": "yarn build:sepolia && graph deploy --version-label=${npm_package_version} --studio thebadge-sepolia-staging",
+    "deploy:goerli-dev-hosted": "yarn build:goerli && graph deploy --product hosted-service thebadgeadmin/thebadge-goerli-dev",
+    "deploy:goerli-dev": "yarn build:goerli && graph deploy --version-label=${npm_package_version} --studio thebadge-goerli-dev",
+    "deploy:goerli-staging": "yarn build:goerli && graph deploy --version-label=${npm_package_version} --studio thebadge-goerli-staging",
+    "deploy:gnosis-prod": "yarn build:gnosis && graph deploy --version-label=${npm_package_version} --studio thebadge-gnosis-prod",
+    "deploy:matic-staging": "yarn build:matic && graph deploy --version-label=${npm_package_version} --studio thebadge-matic-staging",
+    "deploy:matic-prod": "yarn build:matic && graph deploy --product hosted-service thebadgeadmin/thebadge-matic-dev",
+    "deploy:dev": "yarn deploy:goerli-dev && yarn deploy:sepolia-dev",
+    "deploy:staging": "yarn deploy:goerli-staging && yarn deploy:sepolia-staging",
+    "deploy:prod": "yarn deploy:gnosis-prod",
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ developerfred/thebadge-test",
-    "create-local": "graph create --node http://localhost:8020/ developerfred/thebadge-test",
-    "remove-local": "graph remove --node http://localhost:8020/ developerfred/thebadge-test",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 developerfred/thebadge-test",
-    "test": "graph test",
-    "auth:codingsh": "graph auth --product hosted-service a3195ebe9408404483f3bca0c0ec6424",
-    "deploy:matic-codingsh": "yarn build:matic && graph deploy --product hosted-service developerfred/thebadge-test"
+    "auth:hosted": "graph auth --product hosted-service eval $(grep THE_GRAPH_DEV_TESTING_AUTH_TOKEN .env | cut -d '=' -f2)",
+    "auth:studio": "graph auth --studio eval $(grep THE_GRAPH_SEPOLIA_TESTING_AUTH_TOKEN .env | cut -d '=' -f2)",
+    "create-local": "graph create --node http://localhost:8020/ thebadgeadmin/dev-testing",
+    "remove-local": "graph remove --node http://localhost:8020/ thebadgeadmin/dev-testing",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 thebadgeadmin/thebadge-development"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.62.0",
     "@graphprotocol/graph-ts": "0.30.0"
   },
-  "devDependencies": { "matchstick-as": "0.5.0" }
+  "devDependencies": {
+    "mustache": "^4.0.1",
+    "@typescript-eslint/parser": "^5.38.0",
+    "@typescript-eslint/eslint-plugin": "^5.39.0",
+    "eslint": "^8.23.1",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-rulesdir": "^0.2.1",
+    "eslint-config-prettier": "^8.5.0",
+    "typescript": "^4.8.3",
+    "matchstick-as": "0.5.0"
+  }
 }
